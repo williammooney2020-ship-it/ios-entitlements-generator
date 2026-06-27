@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>iOS Entitlements Generator — Build Your .entitlements File</title>
+<meta name="description" content="Generate your iOS .entitlements plist instantly. Select capabilities — Push Notifications, Sign In with Apple, iCloud, HealthKit, App Groups, Associated Domains — and download a ready-to-use file. Free." />
+<link rel="canonical" href="https://ios-entitlements-generator.vercel.app/" />
+<meta property="og:title" content="iOS Entitlements Generator — .entitlements File Builder" />
+<meta property="og:description" content="Select iOS capabilities and get your .entitlements plist in seconds. Push, Sign In with Apple, iCloud, HealthKit, App Groups, and more. Free, browser-only." />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="iOS Entitlements Generator" />
+<meta name="twitter:description" content="Build your iOS .entitlements file by picking capabilities. Free, no login, instant download." />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"iOS Entitlements Generator","url":"https://ios-entitlements-generator.vercel.app/","description":"Generate iOS .entitlements plist files. Covers Push Notifications, Sign In with Apple, iCloud, HealthKit, App Groups, Associated Domains, and more.","applicationCategory":"DeveloperApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
+<style>
+  :root{
+    --bg:#0b0c10;--panel:#15171f;--panel2:#1c1f2a;--ink:#eef1f7;--muted:#9aa3b5;
+    --line:#262a36;--accent:#5b8cff;--ok:#34d399;--warn:#fbbf24;--err:#f87171;
+    --radius:14px;--mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:radial-gradient(1100px 600px at 65% -10%,#0d1f3a 0,transparent 55%),var(--bg)}
+  header{padding:42px 22px 10px;max-width:900px;margin:0 auto}
+  .badge{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);
+    border:1px solid var(--line);padding:5px 11px;border-radius:999px;background:var(--panel)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok)}
+  h1{font-size:30px;margin:16px 0 6px;letter-spacing:-.4px}
+  h1 span{color:var(--accent)}
+  .sub{color:var(--muted);max-width:640px}
+  main{max-width:900px;margin:18px auto 60px;padding:0 22px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:18px}
+  h2{font-size:15px;font-weight:700;color:var(--ink);margin:0 0 6px}
+  .section-desc{font-size:13px;color:var(--muted);margin:0 0 16px}
+  code{font-family:var(--mono);font-size:12.5px;background:var(--panel2);padding:1px 5px;border-radius:4px;color:var(--accent)}
+
+  /* Capability cards */
+  .cap-card{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden;transition:border-color .15s}
+  .cap-card.active{border-color:var(--ok)}
+  .cap-header{display:flex;gap:12px;padding:14px;cursor:pointer;align-items:flex-start;background:var(--panel2)}
+  .cap-header:hover{background:rgba(91,140,255,.05)}
+  .cap-header input[type=checkbox]{flex:none;margin-top:3px;width:18px;height:18px;cursor:pointer;accent-color:var(--ok)}
+  .cap-icon{font-size:22px;flex:none;line-height:1.4}
+  .cap-info{flex:1}
+  .cap-name{font-weight:700;font-size:14.5px}
+  .cap-desc{color:var(--muted);font-size:13px;margin-top:2px}
+  .cap-req{font-size:12px;color:var(--accent);margin-top:3px;opacity:.8}
+
+  /* Fields */
+  .cap-fields{background:var(--bg);padding:14px 16px;border-top:1px solid var(--line)}
+  .field-group{margin-bottom:12px}
+  .field-group:last-child{margin-bottom:0}
+  .field-label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;
+    letter-spacing:.4px;margin-bottom:6px}
+  .cap-fields select,.cap-fields input[type=text],.cap-fields textarea{
+    width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:8px 12px;font:14px/1.4 var(--mono);outline:none}
+  .cap-fields select:focus,.cap-fields input:focus,.cap-fields textarea:focus{border-color:var(--accent)}
+  .cap-fields select{cursor:pointer}
+  .cap-fields textarea{resize:vertical;min-height:70px}
+  .field-note{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+  .multichecks{display:flex;flex-direction:column;gap:4px}
+  .sub-check{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer}
+  .sub-check input{width:16px;height:16px;cursor:pointer;accent-color:var(--accent)}
+
+  /* Generate button */
+  button.primary{cursor:pointer;border:0;border-radius:10px;padding:13px 16px;font:inherit;font-weight:650;
+    background:linear-gradient(180deg,#6b97ff,#4a78ff);color:#fff;width:100%;margin-top:4px;font-size:15.5px}
+  button.primary:active{transform:translateY(1px)}
+
+  /* Output */
+  #outputSection{display:none}
+  #outputBox{width:100%;min-height:260px;background:var(--panel2);border:1px solid var(--line);color:var(--ok);
+    border-radius:10px;padding:14px;font:12.5px/1.6 var(--mono);resize:vertical;outline:none;white-space:pre;overflow:auto}
+  .output-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .output-btns button{cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:9px 16px;
+    font:13px/1 -apple-system,BlinkMacSystemFont,sans-serif;font-weight:600;background:var(--panel2);color:var(--ink)}
+  .output-btns button:hover{border-color:var(--accent);color:var(--accent)}
+
+  .info-box{background:rgba(91,140,255,.06);border:1px solid rgba(91,140,255,.2);border-radius:10px;
+    padding:12px 16px;font-size:13px;color:#aabcf5;margin-bottom:16px}
+  .tip-box{background:linear-gradient(135deg,#1a2035 0%,#141825 100%);border:1px solid #2a304a;
+    border-radius:14px;padding:22px 26px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:24px}
+  footer{max-width:900px;margin:0 auto;padding:0 22px 50px;color:#6b7385;font-size:12.5px}
+  footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <span class="badge"><span class="dot"></span>Runs in your browser · nothing uploaded</span>
+  <h1>iOS Entitlements <span>Generator</span></h1>
+  <p class="sub">Pick the capabilities your app needs and get a ready-to-use <code>.entitlements</code> plist. Drop it in Xcode alongside your provisioning profile — no manual XML editing.</p>
+</header>
+<main>
+
+  <div class="info-box">
+    ℹ️ After adding your .entitlements file, enable the matching capabilities in <b>Xcode → [Target] → Signing &amp; Capabilities</b>. The entitlements file and the provisioning profile must match.
+  </div>
+
+  <div class="card">
+    <h2>Select Capabilities</h2>
+    <p class="section-desc">Check every capability your app uses. Where options appear, configure them for your setup.</p>
+    <div id="capabilityList"></div>
+  </div>
+
+  <button class="primary" onclick="generateEntitlements()">Generate .entitlements →</button>
+
+  <div id="outputSection" style="margin-top:20px">
+    <div class="card">
+      <h2>Your App.entitlements</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
+        In Xcode: select your target → <b>Signing &amp; Capabilities</b> → make sure your bundle ID matches.
+        Then drag <code>App.entitlements</code> into your project (add to target). Xcode will detect it automatically
+        if it has the same base name as your target, or set the path in Build Settings → <code>CODE_SIGN_ENTITLEMENTS</code>.
+      </p>
+      <textarea id="outputBox" readonly></textarea>
+      <div class="output-btns">
+        <button id="copyBtn" onclick="copyEntitlements()">Copy to clipboard</button>
+        <button onclick="downloadEntitlements()">Download App.entitlements</button>
+      </div>
+    </div>
+
+    <div class="tip-box">
+      <div>
+        <div style="font-weight:700;font-size:16px;margin-bottom:6px">✦ Found this useful? Support the project</div>
+        <div style="color:#9aa3b5;font-size:13.5px;max-width:460px">Orb Intelligence is a one-person indie studio. A tip funds more free tools and keeps these running.</div>
+      </div>
+      <a href="https://buy.stripe.com/4gM28t2xG3SngLvbiY6wE01" target="_blank" rel="noopener"
+        style="display:inline-block;background:linear-gradient(180deg,#6b97ff,#4a78ff);color:#fff;font-weight:650;font-size:14.5px;padding:12px 26px;border-radius:10px;text-decoration:none;white-space:nowrap;flex:none">
+        Support · $9.90
+      </a>
+    </div>
+  </div>
+
+</main>
+<footer>
+  Built by <b>Orb Intelligence</b>. Generated entitlements are a starting template — verify capability identifiers match your provisioning profile.
+  Always test entitlements with a physical device, not just the simulator.
+  <br><br>
+  More free tools:
+  <a href="https://appstore-metadata-auditor.vercel.app/" rel="noopener">Metadata Auditor</a> ·
+  <a href="https://ios-privacy-policy-generator.vercel.app/" rel="noopener">Privacy Policy Generator</a> ·
+  <a href="https://ios-app-review-generator.vercel.app/" rel="noopener">Review Responder</a> ·
+  <a href="https://appstore-screenshot-generator-theta.vercel.app/" rel="noopener">Screenshot Generator</a> ·
+  <a href="https://appstore-keyword-optimizer.vercel.app/" rel="noopener">Keyword Optimizer</a> ·
+  <a href="https://appstore-release-notes-generator.vercel.app/" rel="noopener">Release Notes Generator</a> ·
+  <a href="https://ios-app-icon-resizer.vercel.app/" rel="noopener">Icon Resizer</a> ·
+  <a href="https://appstore-submission-checklist.vercel.app/" rel="noopener">Submission Checklist</a> ·
+  <a href="https://ios-privacy-manifest-generator.vercel.app/" rel="noopener">Privacy Manifest Generator</a> ·
+  <a href="https://ios-entitlements-generator.vercel.app/" rel="noopener">Entitlements Generator</a>
+</footer>
+<script src="entitlements.js"></script>
+</body>
+</html>
